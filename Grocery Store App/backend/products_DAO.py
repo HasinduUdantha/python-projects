@@ -51,3 +51,7 @@ if __name__ == "__main__":
     "unitMessure_id": '1',
     "price_per_unit": '120'
     }))
+    
+if __name__ == "__main__":
+    connection = get_sql_connection()
+    print(get_all_products(connection))    

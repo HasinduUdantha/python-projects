@@ -10,12 +10,11 @@ load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-GOOGLE_API_KEY = ""
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 # Dietary Planner Agent
 dietary_planner = Agent(
-    model=Gemini(id="gemini-2.0-flash-exp"),
+    model=Gemini(id="gemini-3-flash-preview"),
     description="Creates personalized dietary plans based on user input.",
     instructions=[
         "Generate a diet plan with breakfast, lunch, dinner, and snacks.",

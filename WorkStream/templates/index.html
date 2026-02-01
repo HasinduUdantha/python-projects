@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SprintLite - Python Version</title>
+    <style>
+        /* CSS to match your Bubble design */
+        body { font-family: sans-serif; background-color: #F5F7FA; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        /* Header Stats */
+        .header { display: flex; gap: 20px; margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; flex: 1; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .big-number { font-size: 36px; font-weight: bold; color: #1F2937; }
+        .label { color: #6B7280; font-size: 14px; margin-top: 5px; }
+
+        /* Input Form */
+        .input-group { display: flex; gap: 10px; background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; flex: 1; }
+        button { background: #3B82F6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #2563EB; }
+
+        /* Job List */
+        .job-row { display: flex; gap: 10px; background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; align-items: center; }
+        .job-row.completed { background-color: #DCFCE7; border: 1px solid #86EFAC; }
+        .job-row.overdue .date-text { color: red; font-weight: bold; }
+        .delete-btn { background: none; color: #EF4444; font-size: 20px; padding: 0; flex: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="card">
+            <div class="big-number" id="stats-completed">0 / 0</div>
+            <div class="label">Tasks Completed</div>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="new-title" placeholder="Job Title">
+        <input type="text" id="new-assignee" placeholder="Assignee Name">
+        <input type="date" id="new-date">
+        <button onclick="addJob()">Add Job</button>
+    </div>
+
+    <div id="job-list">
+        </div>
+</div>
+
+<script>
+    const API_URL = '/api/jobs';
+
+    async function loadJobs() {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        // Update Stats
+        document.getElementById('stats-completed').innerText = `${data.stats.completed} / ${data.stats.total}`;
+        
+        // Render List
+        const list = document.getElementById('job-list');
+        list.innerHTML = '';
+        
+        data.jobs.forEach(job => {
+            const isCompleted = job.status === 'Completed';
+            const isOverdue = new Date(job.due_date) < new Date() && !isCompleted;
+            
+            // Note: In a real app, you would separate the HTML string generation
+            const html = `
+                <div class="job-row ${isCompleted ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}">
+                    <input type="text" value="${job.title}" onchange="updateJob(${job.id}, 'title', this.value)">
+                    <input type="text" value="${job.assignee}" onchange="updateJob(${job.id}, 'assignee', this.value)">
+                    <span class="date-text">${new Date(job.due_date).toISOString().split('T')[0]}</span>
+                    <select onchange="updateJob(${job.id}, 'status', this.value)">
+                        <option value="Not Started" ${job.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                        <option value="Completed" ${isCompleted ? 'selected' : ''}>Completed</option>
+                    </select>
+                    <button class="delete-btn" onclick="deleteJob(${job.id})">🗑️</button>
+                </div>
+            `;
+            list.innerHTML += html;
+        });
+    }
+
+    async function addJob() {
+        const title = document.getElementById('new-title').value;
+        const assignee = document.getElementById('new-assignee').value;
+        const date = document.getElementById('new-date').value;
+
+        if(!title || !date) return alert("Title and Date are required!");
+
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ title, assignee, due_date: date })
+        });
+        
+        // Clear inputs and reload
+        document.getElementById('new-title').value = '';
+        loadJobs();
+    }
+
+    async function updateJob(id, field, value) {
+        const body = {};
+        body[field] = value;
+        
+        await fetch(`${API_URL}/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        loadJobs(); // Reload to refresh styling (e.g. green background)
+    }
+
+    async function deleteJob(id) {
+        if(confirm('Delete this job?')) {
+            await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            loadJobs();
+        }
+    }
+
+    // Initial Load
+    loadJobs();
+</script>
+
+</body>
+</html>

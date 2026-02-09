@@ -80,7 +80,7 @@
 # from math import sqrt, pow # importing specific functions from math module
 
 # val1 = sqrt(25)
-# val2 = pow(2, 4)    
+val2 = pow(2, 4)    
 
 # print("Square root of 25 is:", val1)
 # print("2 raised to power 4 is:", val2)
